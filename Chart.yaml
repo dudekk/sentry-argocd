@@ -1,0 +1,11 @@
+apiVersion: v2
+name: sentry
+description: A Helm chart of Sentry
+type: application
+
+version: 1.0.0
+
+dependencies:
+  - name: sentry
+    version: ~26.14.1
+    repository: https://sentry-kubernetes.github.io/charts

@@ -1,0 +1,70 @@
+sentry:
+  config:
+    sentryConfPy: |
+      CSRF_TRUSTED_ORIGINS = ["sentry.mydomain.com", "127.0.0.1:9000", "sentry-web:9000"]
+      SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+      USE_X_FORWARDED_HOST = True
+      SESSION_COOKIE_SECURE = True
+      CSRF_COOKIE_SECURE = True
+      SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+  system:
+    url: https://sentry.mydomain.com
+  nginx:
+    enabled: false
+  ingress:
+    enabled: false
+    ingressClassName: external-lb
+    hostname: sentry.mydomain.com
+    regexPathStyle: nginx
+    tls:
+    - secretName: mydomain-external-wildcard
+      hosts:
+      - sentry.mydomain.com
+
+  sentry:
+    existingSecret: "sentry-sentry-secret"
+    existingSecretKey: "key"
+    web:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - sentry
+              topologyKey: "kubernetes.io/hostname"
+
+    worker:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - sentry
+              topologyKey: "kubernetes.io/hostname"
+
+  postgresql:
+    enabled: true
+    auth:
+      database: sentry
+      existingSecret: sentry-sentry-postgresql
+
+  kafka:
+    kraft:
+      existingClusterIdSecret: sentry-kafka-kraft-cluster-id
+
+  mail:
+    backend: smtp
+    useTls: true
+    useSsl: false
+    username: "XXXXXXXX"
+    existingSecret: sentry-config
+    existingSecretKey: smtp_password
+    port: 587
+    host: "email-smtp.eu-west-1.amazonaws.com"
+    from: "sentry@sentry.mydomain.com"
